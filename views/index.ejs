@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Real-time Tracker</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css"
+      integrity="sha512-h9FcoyWjHcOcmEVkxOfTLnmZFWIH0iZhZT1H2TbOq55xssQGEJHEaIm+PgoUaZbRvQTNTluNOEfb1ZRy6D3BOw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <style>
+      #mapView {
+        height: 100vh;
+        width: 100vw;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="mapView"></div>
+  </body>
+  <script
+    src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"
+    integrity="sha512-puJW3E/qXDqYp9IfhAI54BJEaWIfloJ7JWs7OeD5i6ruC9JZL1gERT1wjtwXFlh7CjE7ZJ+/vcRZRkIYIb6p4g=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  ></script>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    console.log("Hello from index.js!");
+    const server = io("http://localhost:3000/");
+
+    try {
+      const geo = navigator.geolocation;
+      geo.watchPosition(
+        (position) => {
+          const lat = position.coords.latitude;
+          const long = position.coords.longitude;
+          if (lat && long) {
+            server.emit("location", { lat, long });
+          }
+        },
+        (error) => {
+          console.error(error);
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      );
+    } catch (error) {
+      console.error(error);
+    }
+
+    const map = L.map("mapView").setView([0, 0], 15);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "M Hamza",
+    }).addTo(map);
+
+    const markers = {};
+
+    server.on("sendLocationBack", (data) => {
+      const { id, lat, long } = data;
+      map.setView([lat, long]);
+      if (!markers[id]) {
+        markers[id] = L.marker([lat, long]).addTo(map);
+        console.log(markers);
+      } else {
+        markers[id].setLatLng([lat, long]);
+      }
+    });
+
+    server.on("userDisconnected", (id) => {
+      if (markers[id]) {
+        map.removeLayer(markers[id]);
+        delete markers[id];
+      }
+    });
+
+
+  </script>
+</html>
