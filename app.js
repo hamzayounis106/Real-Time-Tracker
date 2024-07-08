@@ -2,7 +2,7 @@ import express from "express";
 import { createServer } from "http";
 import Server from "socket.io";
 import path from "path";
-
+const Port = process.env.PORT || 3000;
 const app = express();
 const server = createServer(app);
 const io = new Server(server);
@@ -11,8 +11,8 @@ app.set("view engine", "ejs");
 
 // Set up your routes and other middleware
 
-server.listen(3000, () => {
-  console.log("Server is running on http://localhost:3000");
+server.listen(Port, () => {
+  console.log("Server is running ");
 });
 app.get("/", (req, res) => {
   res.render("index");
