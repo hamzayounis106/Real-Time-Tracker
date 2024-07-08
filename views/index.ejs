@@ -37,8 +37,7 @@
     const server = io("https://real-time-tracker-3a1375d5093a.herokuapp.com/");
 
     try {
-      const geo = navigator.geolocation;
-      geo.watchPosition(
+      navigator.geolocation.watchPosition(
         (position) => {
           const lat = position.coords.latitude;
           const long = position.coords.longitude;
@@ -48,8 +47,13 @@
         },
         (error) => {
           console.error(error);
+          if (error.code === 3) {
+            alert(
+              "Location request timed out. Please ensure your device's location services are enabled and try again."
+            );
+          }
         },
-        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 } // Increased timeout to 10 seconds
       );
     } catch (error) {
       console.error(error);
@@ -79,7 +83,5 @@
         delete markers[id];
       }
     });
-
-
   </script>
 </html>
